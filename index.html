@@ -311,7 +311,7 @@ hr { border:none; border-top:8px solid #F4F4F4; margin:0 -18px; }
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="modal-service-title">서비스 블럭 추가</div>
-    <div class="modal-sub">신청자 화면에 노출될 서비스를 설정하세요</div>
+    <div class="modal-sub">신청자 화면에 노출될 서비스를 설정하세요 <span id="draft-badge" style="display:none;color:var(--orange);font-weight:700;">· 임시저장 불러옴</span></div>
 
     <div class="form-group">
       <label class="form-label">이모지</label>
@@ -732,6 +732,7 @@ function openAddService() {
   ['s-emoji','s-name','s-price','s-cost','s-desc','s-target','s-deadline','s-origprice'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  loadDraft();
   openModal('modal-service');
 }
 
@@ -767,6 +768,7 @@ function saveService() {
     services.push({ id: nextServiceId++, emoji, name, price, cost, origPrice, desc, target, deadline, active:true });
   }
   closeModal('modal-service');
+  clearDraft();
   renderAll();
 }
 
@@ -778,10 +780,45 @@ function deleteService(id) {
 
 // ── MODAL HELPERS
 function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.addEventListener('click', e => {
-  if (e.target.classList.contains('modal-overlay')) closeModal(e.target.id);
-});
+function closeModal(id) {
+  // 서비스 모달 닫을 때 임시저장
+  if (id === 'modal-service') saveDraft();
+  document.getElementById(id).classList.remove('open');
+}
+// 바깥 클릭 시 닫히지 않음 — 이벤트 없음
+
+// ── 임시저장 (서비스 모달)
+const DRAFT_KEY = 'bt_service_draft';
+function saveDraft() {
+  const draft = {
+    emoji: document.getElementById('s-emoji').value,
+    name: document.getElementById('s-name').value,
+    price: document.getElementById('s-price').value,
+    cost: document.getElementById('s-cost').value,
+    desc: document.getElementById('s-desc').value,
+    target: document.getElementById('s-target').value,
+    deadline: document.getElementById('s-deadline').value,
+    origPrice: document.getElementById('s-origprice').value,
+  };
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+}
+function loadDraft() {
+  const raw = localStorage.getItem(DRAFT_KEY);
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    document.getElementById('s-emoji').value = d.emoji || '';
+    document.getElementById('s-name').value = d.name || '';
+    document.getElementById('s-price').value = d.price || '';
+    document.getElementById('s-cost').value = d.cost || '';
+    document.getElementById('s-desc').value = d.desc || '';
+    document.getElementById('s-target').value = d.target || '';
+    document.getElementById('s-deadline').value = d.deadline || '';
+    document.getElementById('s-origprice').value = d.origPrice || '';
+    document.getElementById('draft-badge').style.display = 'inline';
+  } catch(e) {}
+}
+function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
 </script>
 </body>
 </html>
