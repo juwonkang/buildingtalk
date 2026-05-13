@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>빌딩톡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --orange:#FF6F1E; --orange2:#FF8C42; --orangelight:#FFF4EE;
+  --black:#111; --gray:#888; --lightgray:#F5F5F5; --border:#EBEBEB;
+  --green:#16A34A; --greenlight:#DCFCE7; --red:#DC2626; --redlight:#FEE2E2;
+  --blue:#2563EB; --bluelight:#DBEAFE; --yellow:#CA8A04; --yellowlight:#FEF9C3;
+  --white:#fff; --radius:14px; --shadow:0 2px 16px rgba(0,0,0,0.08);
+}
+body { font-family:'Noto Sans KR',sans-serif; background:#F4F4F4; color:var(--black); min-height:100vh; }
+
+/* ── NAV ── */
+.nav { background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:200;
+  display:flex; align-items:center; padding:0 16px; height:52px; gap:4px; }
+.nav-logo { font-size:17px; font-weight:900; color:var(--orange); margin-right:12px; flex-shrink:0; }
+.nav-tabs { display:flex; flex:1; overflow-x:auto; scrollbar-width:none; gap:2px; }
+.nav-tabs::-webkit-scrollbar { display:none; }
+.nav-tab { padding:14px 12px; font-size:13px; font-weight:700; color:var(--gray);
+  cursor:pointer; border:none; background:none; border-bottom:2px solid transparent;
+  white-space:nowrap; font-family:inherit; transition:.15s; }
+.nav-tab.active { color:var(--orange); border-bottom-color:var(--orange); }
+/* 어드민 탭은 기본 숨김 — 로그인 후 표시 */
+#tab-admin { display:none; }
+
+/* ── SCREENS ── */
+.screen { display:none; padding:16px; max-width:480px; margin:0 auto; padding-bottom:40px; }
+.screen.active { display:block; }
+
+/* ── CARDS ── */
+.card { background:#fff; border-radius:var(--radius); padding:18px; margin-bottom:12px;
+  border:1px solid var(--border); }
+.card-title { font-size:15px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:6px; }
+
+/* ── HERO ── */
+.hero { background:var(--black); border-radius:18px; padding:24px 20px; margin-bottom:14px; position:relative; overflow:hidden; }
+.hero::after { content:''; position:absolute; top:-30px; right:-30px; width:120px; height:120px;
+  background:var(--orange); border-radius:50%; opacity:.18; }
+.hero-tag { display:inline-block; background:var(--orange); color:#fff; font-size:10px;
+  font-weight:800; padding:3px 9px; border-radius:20px; margin-bottom:10px; letter-spacing:.5px; }
+.hero-title { font-size:20px; font-weight:900; color:#fff; line-height:1.3; margin-bottom:6px; }
+.hero-title em { color:var(--orange); font-style:normal; }
+.hero-sub { font-size:12px; color:#aaa; line-height:1.6; }
+
+/* ── PROGRESS ── */
+.progress-wrap { background:var(--orangelight); border:1.5px solid #FFD4B8; border-radius:var(--radius);
+  padding:16px; margin-bottom:12px; }
+.prog-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.prog-label { font-size:13px; font-weight:700; }
+.prog-count { font-size:22px; font-weight:900; color:var(--orange); }
+.prog-count span { font-size:12px; color:var(--gray); font-weight:600; }
+.prog-bar { height:7px; background:#FFD4B8; border-radius:4px; overflow:hidden; margin-bottom:6px; }
+.prog-fill { height:100%; background:var(--orange); border-radius:4px; transition:.5s; }
+.prog-bottom { display:flex; justify-content:space-between; font-size:11px; color:var(--gray); }
+
+/* ── PRICE TABLE ── */
+.price-row { display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-bottom:1px solid var(--border); }
+.price-row:last-child { border:none; padding-bottom:0; }
+.price-row:first-child { padding-top:0; }
+.price-label { font-size:13px; color:var(--gray); }
+.price-val { font-size:15px; font-weight:800; }
+.price-val.orange { color:var(--orange); }
+.price-val.strike { text-decoration:line-through; color:#ccc; font-size:12px; font-weight:500; }
+
+/* ── FORM ── */
+.form-group { margin-bottom:14px; }
+.form-label { font-size:12px; font-weight:700; color:var(--black); margin-bottom:6px; display:block; }
+.form-input, .form-select { width:100%; padding:12px 14px; border:1.5px solid var(--border);
+  border-radius:10px; font-size:14px; font-family:inherit; outline:none; background:#fff;
+  transition:border-color .2s; appearance:none; }
+.form-input:focus, .form-select:focus { border-color:var(--orange); }
+.form-select { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; cursor:pointer; }
+
+/* ── BUTTONS ── */
+.btn { width:100%; padding:14px; border-radius:12px; font-size:15px; font-weight:800;
+  cursor:pointer; border:none; font-family:inherit; transition:.15s; letter-spacing:-.3px; }
+.btn-primary { background:var(--orange); color:#fff; }
+.btn-primary:hover { background:#e55e0e; }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+.btn-secondary { background:var(--lightgray); color:var(--black); }
+.btn-sm { width:auto; padding:7px 14px; font-size:12px; border-radius:8px; font-weight:700; }
+.btn-green { background:var(--greenlight); color:var(--green); }
+.btn-red { background:var(--redlight); color:var(--red); }
+.btn-blue { background:var(--bluelight); color:var(--blue); }
+.btn-orange { background:var(--orangelight); color:var(--orange); }
+
+/* ── BADGES ── */
+.badge { display:inline-block; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:700; }
+.badge-green { background:var(--greenlight); color:var(--green); }
+.badge-orange { background:var(--orangelight); color:var(--orange); }
+.badge-blue { background:var(--bluelight); color:var(--blue); }
+.badge-gray { background:var(--lightgray); color:var(--gray); }
+.badge-red { background:var(--redlight); color:var(--red); }
+.badge-yellow { background:var(--yellowlight); color:var(--yellow); }
+
+/* ── SERVICE BLOCKS ── */
+.service-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.service-block { background:#fff; border-radius:14px; padding:16px; border:1px solid var(--border);
+  cursor:pointer; transition:.15s; position:relative; overflow:hidden; }
+.service-block:hover { border-color:var(--orange); transform:translateY(-1px); box-shadow:var(--shadow); }
+.service-block.expired { opacity:.55; cursor:default; }
+.service-block-emoji { font-size:28px; margin-bottom:8px; }
+.service-block-name { font-size:13px; font-weight:800; margin-bottom:4px; }
+.service-block-price { font-size:12px; color:var(--orange); font-weight:700; }
+.service-block-sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.service-block-badge { position:absolute; top:10px; right:10px; }
+
+/* ── BOOKING ITEMS ── */
+.booking-item { display:flex; align-items:center; gap:12px; padding:12px 0;
+  border-bottom:1px solid var(--border); }
+.booking-item:last-child { border:none; padding-bottom:0; }
+.booking-item:first-child { padding-top:0; }
+.booking-num { width:30px; height:30px; border-radius:8px; background:var(--orangelight);
+  color:var(--orange); font-weight:800; font-size:12px; display:flex; align-items:center;
+  justify-content:center; flex-shrink:0; }
+.booking-info { flex:1; min-width:0; }
+.booking-title { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.booking-sub { font-size:11px; color:var(--gray); margin-top:2px; }
+.booking-actions { display:flex; gap:6px; flex-shrink:0; }
+
+/* ── NOTICE BOX ── */
+.notice-box { background:#FFF8F0; border:1px solid #FFD4B8; border-radius:10px;
+  padding:12px 14px; margin-bottom:12px; font-size:12px; color:#92400E; line-height:1.7; }
+.notice-box.info { background:#EFF6FF; border-color:#BFDBFE; color:#1e40af; }
+
+/* ── STATS ── */
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.stat-card { background:#fff; border-radius:12px; padding:14px; border:1px solid var(--border); text-align:center; }
+.stat-num { font-size:26px; font-weight:900; color:var(--orange); }
+.stat-label { font-size:11px; color:var(--gray); margin-top:3px; font-weight:600; }
+
+/* ── MODAL ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:500;
+  display:none; align-items:flex-end; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:#fff; border-radius:20px 20px 0 0; padding:24px 20px 40px;
+  width:100%; max-width:480px; max-height:85vh; overflow-y:auto; }
+.modal-handle { width:36px; height:4px; background:#e0e0e0; border-radius:2px;
+  margin:0 auto 18px; }
+.modal-title { font-size:17px; font-weight:900; margin-bottom:4px; }
+.modal-sub { font-size:12px; color:var(--gray); margin-bottom:18px; }
+
+/* ── LOGIN ── */
+.login-wrap { min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; padding:24px; background:var(--black); }
+.login-logo { font-size:28px; font-weight:900; color:var(--orange); margin-bottom:6px; }
+.login-sub { font-size:13px; color:#888; margin-bottom:32px; }
+.login-box { background:#1a1a1a; border-radius:18px; padding:24px; width:100%; max-width:360px; }
+.login-label { font-size:12px; color:#aaa; font-weight:700; margin-bottom:8px; display:block; }
+.login-input { width:100%; padding:13px 14px; background:#2a2a2a; border:1.5px solid #333;
+  border-radius:10px; color:#fff; font-size:14px; font-family:inherit; outline:none; margin-bottom:14px; }
+.login-input:focus { border-color:var(--orange); }
+.login-error { font-size:12px; color:var(--red); margin-bottom:12px; text-align:center; display:none; }
+
+/* ── ADMIN SERVICE CARD ── */
+.admin-service { background:#fff; border-radius:14px; padding:16px; margin-bottom:10px;
+  border:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+.admin-service-icon { font-size:28px; flex-shrink:0; }
+.admin-service-info { flex:1; }
+.admin-service-name { font-size:14px; font-weight:800; }
+.admin-service-meta { font-size:12px; color:var(--gray); margin-top:2px; }
+.admin-service-actions { display:flex; gap:6px; }
+
+/* ── DETAIL VIEW ── */
+.detail-wrap { display:none; }
+.detail-wrap.open { display:block; }
+.detail-back { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:700;
+  color:var(--orange); margin-bottom:14px; cursor:pointer; background:none; border:none;
+  font-family:inherit; padding:0; }
+
+/* ── COMMENT BOX ── */
+.comment-box { background:var(--lightgray); border-radius:10px; padding:12px; margin-top:8px;
+  font-size:12px; color:var(--gray); line-height:1.6; }
+.comment-box strong { color:var(--red); }
+
+/* ── SUCCESS ── */
+.success-wrap { text-align:center; padding:28px 16px; }
+.success-icon { font-size:52px; margin-bottom:12px; }
+.success-title { font-size:20px; font-weight:900; margin-bottom:8px; }
+.success-sub { font-size:13px; color:var(--gray); line-height:1.7; }
+
+/* ── MAP PLACEHOLDER ── */
+.map-placeholder { background:var(--lightgray); border-radius:12px; height:160px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:13px; color:var(--gray); gap:6px; margin-bottom:14px; border:1px solid var(--border); }
+
+/* ── PHOTO UPLOAD ── */
+.photo-upload { border:2px dashed var(--border); border-radius:12px; padding:24px;
+  text-align:center; cursor:pointer; transition:.15s; }
+.photo-upload:hover { border-color:var(--orange); }
+.photo-upload input { display:none; }
+
+/* ── DIVIDER ── */
+.divider { height:1px; background:var(--border); margin:14px 0; }
+hr { border:none; border-top:8px solid #F4F4F4; margin:0 -18px; }
+
+.tag-row { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.tag { padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600;
+  border:1.5px solid var(--border); cursor:pointer; background:#fff; color:var(--gray); transition:.15s; }
+.tag.on { border-color:var(--orange); background:var(--orangelight); color:var(--orange); }
+
+.section-label { font-size:11px; font-weight:800; color:var(--gray); letter-spacing:.5px;
+  margin-bottom:10px; text-transform:uppercase; }
+
+/* ── MY BOOKINGS (신청 확인) ── */
+.my-booking-card { background:#fff; border-radius:14px; padding:16px; margin-bottom:10px;
+  border:1px solid var(--border); }
+.my-booking-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+.my-booking-service { font-size:14px; font-weight:800; }
+.my-booking-date { font-size:12px; color:var(--gray); margin-top:3px; }
+.my-booking-address { font-size:12px; color:var(--gray); margin-top:2px; }
+.my-booking-comment { background:var(--redlight); border-radius:8px; padding:10px 12px;
+  margin-top:10px; font-size:12px; color:var(--red); line-height:1.6; }
+.my-booking-comment strong { font-weight:700; }
+
+/* ── PHONE LINK ── */
+a.phone-link { color:var(--blue); text-decoration:none; font-weight:700; }
+
+/* ── EXPIRED OVERLAY ── */
+.expired-overlay { position:absolute; inset:0; background:rgba(255,255,255,0.6);
+  display:flex; align-items:center; justify-content:center; border-radius:14px; }
+.expired-overlay span { background:#888; color:#fff; font-size:11px; font-weight:800;
+  padding:4px 10px; border-radius:20px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ ADMIN LOGIN (숨겨진 페이지) ══════════════ -->
+<div id="admin-login" style="display:none;">
+  <div class="login-wrap">
+    <div class="login-logo">빌딩톡</div>
+    <div class="login-sub">관리자 전용</div>
+    <div class="login-box">
+      <label class="login-label">비밀번호</label>
+      <input class="login-input" type="password" id="pw-input" placeholder="비밀번호 입력"
+        onkeydown="if(event.key==='Enter')doLogin()" autocomplete="current-password"/>
+      <div class="login-error" id="login-error">비밀번호가 틀렸습니다</div>
+      <button class="btn btn-primary" onclick="doLogin()">로그인</button>
+    </div>
+    <div style="margin-top:20px;">
+      <button style="background:none;border:none;color:#555;font-size:13px;cursor:pointer;" onclick="cancelAdminLogin()">← 돌아가기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="main-app" style="display:none;">
+
+<nav class="nav">
+  <div class="nav-logo">빌딩톡</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" id="tab-user" onclick="showTab('user',this)">📋 신청</button>
+    <button class="nav-tab" id="tab-mybook" onclick="showTab('mybook',this)">📬 내 신청</button>
+    <button class="nav-tab" id="tab-worker" onclick="showTab('worker',this)">🔧 기사님</button>
+    <!-- 어드민 탭: 로그인 후에만 표시됨 -->
+    <button class="nav-tab" id="tab-admin" onclick="showTab('admin',this)">⚙️ 어드민</button>
+  </div>
+</nav>
+
+<!-- ══ 신청자 화면 ══ -->
+<div class="screen active" id="screen-user">
+
+  <!-- 서비스 목록 -->
+  <div id="user-list-view">
+    <div class="hero">
+      <div class="hero-tag">🏢 광교 더 로프트</div>
+      <div class="hero-title">우리 건물<br><em>공동구매</em></div>
+      <div class="hero-sub">검증된 기사님 · 주민 할인 · 익명 신청</div>
+    </div>
+
+    <div class="section-label">진행 중인 서비스</div>
+    <div class="service-grid" id="service-grid"></div>
+    <div id="expired-section" style="display:none;">
+      <div class="section-label" style="margin-top:8px;">마감된 서비스</div>
+      <div class="service-grid" id="service-grid-expired"></div>
+    </div>
+  </div>
+
+  <!-- 서비스 상세 + 신청 -->
+  <div class="detail-wrap" id="user-detail-view">
+    <button class="detail-back" onclick="closeDetail()">← 목록으로</button>
+    <div id="detail-content"></div>
+  </div>
+
+  <!-- 신청 완료 -->
+  <div class="detail-wrap" id="user-success-view">
+    <div class="card">
+      <div class="success-wrap">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">신청 완료!</div>
+        <div class="success-sub">기사님께서 확인 후 연락드립니다.<br>문의: <strong><a href="tel:01032912949" class="phone-link">010-3291-2949</a></strong></div>
+      </div>
+    </div>
+    <div class="notice-box info" style="margin-bottom:12px;">
+      💡 <strong>내 신청 현황</strong>은 상단 "📬 내 신청" 탭에서 전화번호로 확인하세요
+    </div>
+    <button class="btn btn-secondary" onclick="backToList()">목록으로</button>
+  </div>
+
+</div>
+
+<!-- ══ 내 신청 확인 화면 ══ -->
+<div class="screen" id="screen-mybook">
+  <div class="card" style="background:var(--black);border:none;margin-bottom:14px;">
+    <div style="color:#aaa;font-size:11px;font-weight:700;margin-bottom:6px;">신청자 전용</div>
+    <div style="color:#fff;font-size:19px;font-weight:900;">내 신청 현황</div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔍 전화번호로 조회</div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <input class="form-input" type="tel" id="my-phone" placeholder="010-0000-0000" />
+    </div>
+    <button class="btn btn-primary" onclick="searchMyBookings()">내 신청 조회</button>
+  </div>
+  <div id="my-bookings-result"></div>
+</div>
+
+<!-- ══ 기사님 화면 ══ -->
+<div class="screen" id="screen-worker">
+  <div class="card" style="background:var(--black);border:none;margin-bottom:14px;">
+    <div style="color:#aaa;font-size:11px;font-weight:700;margin-bottom:6px;">기사님 전용</div>
+    <div style="color:#fff;font-size:19px;font-weight:900;">신청 현황 관리</div>
+  </div>
+
+  <div class="stat-grid" id="worker-stats"></div>
+
+  <div class="section-label">신청 목록</div>
+  <div class="card" id="worker-list"></div>
+</div>
+
+<!-- ══ 어드민 화면 ══ -->
+<div class="screen" id="screen-admin">
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div style="font-size:15px;font-weight:800;">관리자 화면</div>
+    <button class="btn btn-sm btn-red" onclick="doLogout()">로그아웃</button>
+  </div>
+
+  <div class="section-label">현황 요약</div>
+  <div class="stat-grid" id="admin-stats"></div>
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <div class="section-label" style="margin:0;">서비스 블럭 관리</div>
+    <button class="btn btn-sm btn-primary" onclick="openAddService()">+ 블럭 추가</button>
+  </div>
+  <div id="admin-service-list"></div>
+
+  <div class="section-label">전체 신청 내역</div>
+  <div class="card" id="admin-bookings"></div>
+
+</div>
+
+</div><!-- /main-app -->
+
+<!-- ══════════════ MODALS ══════════════ -->
+
+<!-- 서비스 추가/수정 모달 -->
+<div class="modal-overlay" id="modal-service">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-service-title">서비스 블럭 추가</div>
+    <div class="modal-sub">신청자 화면에 노출될 서비스를 설정하세요 <span id="draft-badge" style="display:none;color:var(--orange);font-weight:700;">· 임시저장 불러옴</span></div>
+
+    <div class="form-group">
+      <label class="form-label">이모지</label>
+      <input class="form-input" id="s-emoji" placeholder="❄️" maxlength="2" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">서비스명</label>
+      <input class="form-input" id="s-name" placeholder="에어컨 청소" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">가격 (원)</label>
+      <input class="form-input" id="s-price" type="number" placeholder="85000" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">원가 (원, 내부용)</label>
+      <input class="form-input" id="s-cost" type="number" placeholder="75000" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">규모 / 설명</label>
+      <input class="form-input" id="s-desc" placeholder="벽걸이/스탠드 구분 없음" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">모집 목표 (세대)</label>
+      <input class="form-input" id="s-target" type="number" placeholder="10" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">마감일</label>
+      <input class="form-input" id="s-deadline" type="date" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">원래 가격 (취소선용, 없으면 비워도 됨)</label>
+      <input class="form-input" id="s-origprice" type="number" placeholder="100000" />
+    </div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-service')">취소</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveService()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 반려 코멘트 모달 -->
+<div class="modal-overlay" id="modal-reject">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">예약 반려</div>
+    <div class="modal-sub">신청자에게 전달할 사유를 입력하세요</div>
+    <div class="form-group">
+      <textarea class="form-input" id="reject-comment" rows="4"
+        placeholder="예) 해당 날짜는 일정이 어렵습니다. 5월 22일 이후로 다시 신청해주세요." style="resize:none;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-reject')">취소</button>
+      <button class="btn btn-primary" style="flex:2;background:var(--red);" onclick="confirmReject()">반려 처리</button>
+    </div>
+  </div>
+</div>
+
+<!-- 작업 완료 사진 모달 -->
+<div class="modal-overlay" id="modal-complete">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">작업 완료 처리</div>
+    <div class="modal-sub">완료 사진을 등록하세요 (선택)</div>
+    <div class="photo-upload" onclick="document.getElementById('photo-input').click()">
+      <input type="file" id="photo-input" accept="image/*" onchange="previewPhoto(this)">
+      <div id="photo-preview">
+        <div style="font-size:32px;margin-bottom:8px;">📸</div>
+        <div style="font-size:13px;color:var(--gray);">사진을 추가하세요</div>
+      </div>
+    </div>
+    <div id="photo-upload-status" style="font-size:12px;color:var(--gray);margin-top:8px;text-align:center;display:none;">업로드 중...</div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('modal-complete')">취소</button>
+      <button class="btn btn-primary" style="flex:2;background:var(--green);" onclick="confirmComplete()" id="btn-complete">완료 처리</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════ SUPABASE ══════════════
+// ⚠️ 보안 개선: anon key는 공개되어도 되지만, Supabase Dashboard에서
+// RLS(Row Level Security)를 반드시 설정하세요.
+// 어드민 인증은 별도 서버사이드 로직 또는 Supabase Auth로 교체 권장.
+const SUPABASE_URL = 'https://osogvjkbsedcogsydzrl.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9zb2d2amtic2VkY29nc3lkenJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NTAwOTQsImV4cCI6MjA5NDIyNjA5NH0.H3CjV046dDexJoCWNHwA52mHlo9ykXVV1u5KfRJRlqY';
+
+async function sbFetch(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+  if (!res.ok) { const e = await res.text(); console.error(e); return null; }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function dbGetServices() {
+  const data = await sbFetch('services?order=id.asc');
+  return (data || []).map(s => ({
+    id: s.id, emoji: s.emoji, name: s.name, price: s.price, cost: s.cost,
+    origPrice: s.orig_price, desc: s.description, target: s.target,
+    deadline: s.deadline, active: s.active
+  }));
+}
+
+async function dbGetBookings() {
+  const data = await sbFetch('bookings?order=id.asc');
+  return (data || []).map(b => ({
+    id: b.id, serviceId: b.service_id, address: b.address, date: b.date,
+    time: b.time, phone: b.phone, status: b.status, comment: b.comment || '',
+    photoUrl: b.photo_url || ''
+  }));
+}
+
+async function dbAddService(s) {
+  return sbFetch('services', { method:'POST', body: JSON.stringify({
+    emoji: s.emoji, name: s.name, price: s.price, cost: s.cost,
+    orig_price: s.origPrice, description: s.desc, target: s.target,
+    deadline: s.deadline, active: true
+  })});
+}
+
+async function dbUpdateService(id, s) {
+  return sbFetch(`services?id=eq.${id}`, { method:'PATCH', body: JSON.stringify({
+    emoji: s.emoji, name: s.name, price: s.price, cost: s.cost,
+    orig_price: s.origPrice, description: s.desc, target: s.target,
+    deadline: s.deadline
+  })});
+}
+
+async function dbDeleteService(id) {
+  return sbFetch(`services?id=eq.${id}`, { method:'DELETE', prefer:'return=minimal' });
+}
+
+async function dbAddBooking(b) {
+  return sbFetch('bookings', { method:'POST', body: JSON.stringify({
+    service_id: b.serviceId, address: b.address, date: b.date,
+    time: b.time, phone: b.phone, status: '신청완료', comment: ''
+  })});
+}
+
+async function dbUpdateBookingStatus(id, status, comment = '', photoUrl = '') {
+  const body = { status, comment };
+  if (photoUrl) body.photo_url = photoUrl;
+  return sbFetch(`bookings?id=eq.${id}`, { method:'PATCH', body: JSON.stringify(body) });
+}
+
+// ══════════════ 어드민 인증 (서버사이드 검증 권장) ══════════════
+// 현재: Supabase RPC 함수 'verify_admin_pw'를 통해 서버에서 검증
+// Supabase SQL Editor에서 아래 함수를 생성하세요:
+/*
+  create or replace function verify_admin_pw(input_pw text)
+  returns boolean language plpgsql security definer as $$
+  begin
+    return input_pw = current_setting('app.admin_password', true);
+  end;
+  $$;
+  -- 그리고: alter database postgres set "app.admin_password" = '실제비밀번호';
+*/
+// 위 설정이 안 된 경우 로컬 fallback 사용 (보안상 임시 방편)
+async function serverVerifyAdmin(pw) {
+  try {
+    const res = await sbFetch('rpc/verify_admin_pw', {
+      method: 'POST',
+      body: JSON.stringify({ input_pw: pw })
+    });
+    return res === true;
+  } catch(e) {
+    // RPC 함수 없으면 false 반환 — 코드에 비밀번호 노출 안 함
+    console.warn('서버 검증 실패. Supabase RPC 함수를 설정해주세요.');
+    return false;
+  }
+}
+
+// ══════════════ STATE ══════════════
+let isAdmin = false;
+let editingServiceId = null;
+let rejectingBookingId = null;
+let completingBookingId = null;
+let completingPhotoBase64 = null;
+let services = [];
+let bookings = [];
+let currentServiceId = null;
+
+// ══════════════ INIT ══════════════
+window.onload = async () => {
+  const saved = sessionStorage.getItem('bt_admin');
+  if (saved === '1') {
+    isAdmin = true;
+    document.getElementById('tab-admin').style.display = 'block';
+  }
+  await loadData();
+  showMain();
+};
+
+async function loadData() {
+  [services, bookings] = await Promise.all([dbGetServices(), dbGetBookings()]);
+}
+
+function showMain() {
+  document.getElementById('admin-login').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  renderAll();
+}
+
+async function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  const ok = await serverVerifyAdmin(pw);
+  if (ok) {
+    isAdmin = true;
+    sessionStorage.setItem('bt_admin','1');
+    document.getElementById('tab-admin').style.display = 'block';
+    showMain();
+    setTimeout(() => showTab('admin', document.getElementById('tab-admin')), 100);
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  isAdmin = false;
+  sessionStorage.removeItem('bt_admin');
+  document.getElementById('tab-admin').style.display = 'none';
+  showTab('user', document.getElementById('tab-user'));
+}
+
+function cancelAdminLogin() {
+  document.getElementById('admin-login').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+}
+
+// ══════════════ TABS ══════════════
+function showTab(id, el) {
+  if (id === 'admin' && !isAdmin) {
+    document.getElementById('main-app').style.display = 'none';
+    document.getElementById('admin-login').style.display = 'flex';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('login-error').style.display = 'none';
+    return;
+  }
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  el.classList.add('active');
+  renderAll();
+}
+
+// ══════════════ RENDER ══════════════
+function renderAll() {
+  renderServiceGrid();
+  renderWorker();
+  renderAdmin();
+}
+
+function fmt(n) { return Number(n).toLocaleString() + '원'; }
+function statusBadge(s) {
+  const map = { '신청완료':'badge-orange', '예약확인':'badge-blue', '완료':'badge-green', '반려':'badge-red', '변경신청':'badge-yellow' };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+
+// 마감 여부 판단
+function isExpired(s) {
+  if (!s.deadline) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return s.deadline < today;
+}
+
+// ── 신청자 서비스 그리드
+function renderServiceGrid() {
+  const grid = document.getElementById('service-grid');
+  const gridExp = document.getElementById('service-grid-expired');
+  const expSection = document.getElementById('expired-section');
+  if (!grid) return;
+
+  const active = services.filter(s => s.active && !isExpired(s));
+  const expired = services.filter(s => s.active && isExpired(s));
+
+  grid.innerHTML = active.length === 0
+    ? '<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--gray);font-size:13px;">진행 중인 서비스가 없습니다</div>'
+    : active.map(s => serviceBlockHTML(s, false)).join('');
+
+  if (expired.length > 0) {
+    expSection.style.display = 'block';
+    gridExp.innerHTML = expired.map(s => serviceBlockHTML(s, true)).join('');
+  } else {
+    expSection.style.display = 'none';
+  }
+}
+
+function serviceBlockHTML(s, expired) {
+  const cnt = bookings.filter(b => b.serviceId === s.id && b.status !== '반려').length;
+  const pct = Math.min(100, Math.round(cnt / s.target * 100));
+  const full = cnt >= s.target;
+  const clickAttr = expired || full ? '' : `onclick="openService(${s.id})"`;
+  return `<div class="service-block${expired ? ' expired' : ''}" ${clickAttr}>
+    <div class="service-block-badge">
+      ${expired ? '<span class="badge badge-gray">마감</span>' : full ? '<span class="badge badge-red">모집완료</span>' : '<span class="badge badge-orange">모집중</span>'}
+    </div>
+    <div class="service-block-emoji">${s.emoji}</div>
+    <div class="service-block-name">${s.name}</div>
+    <div class="service-block-price">${fmt(s.price)}</div>
+    <div class="service-block-sub">${cnt}/${s.target}명 · ${pct}%</div>
+  </div>`;
+}
+
+// ── 서비스 상세
+function openService(id) {
+  currentServiceId = id;
+  const s = services.find(x => x.id === id);
+  if (!s || isExpired(s)) return;
+  const cnt = bookings.filter(b => b.serviceId === id && b.status !== '반려').length;
+  const pct = Math.min(100, Math.round(cnt / s.target * 100));
+
+  document.getElementById('user-list-view').style.display = 'none';
+  document.getElementById('user-detail-view').classList.add('open');
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="hero" style="margin-bottom:12px;">
+      <div class="hero-tag">${s.emoji} ${s.name}</div>
+      <div class="hero-title">${s.name}<br><em>${fmt(s.price)}</em></div>
+      <div class="hero-sub">${s.desc}</div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="prog-top">
+        <div class="prog-label">신청 현황</div>
+        <div class="prog-count">${cnt}<span>/${s.target}명</span></div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <div class="prog-bottom"><span>${cnt >= s.target ? '🎉 목표 달성!' : `${s.target - cnt}명 더 모이면 확정`}</span><span>마감 ${s.deadline}</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💰 가격 안내</div>
+      ${s.origPrice ? `<div class="price-row"><div class="price-label">개별 신청 시</div><div class="price-val strike">${fmt(s.origPrice)}~</div></div>` : ''}
+      <div class="price-row"><div class="price-label">공동구매 가격</div><div class="price-val orange">${fmt(s.price)}</div></div>
+      <div class="price-row"><div class="price-label">결제 방법</div><div class="price-val" style="font-size:12px;font-weight:600;">작업 완료 후 기사님께 직접</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 신청하기</div>
+      <div class="form-group">
+        <label class="form-label">주소 검색</label>
+        <div style="display:flex;gap:8px;">
+          <input class="form-input" id="f-postcode" placeholder="우편번호" style="flex:0 0 100px;" readonly />
+          <button type="button" class="btn btn-secondary" style="flex:1;padding:12px;" onclick="searchAddress()">🔍 주소 검색</button>
+        </div>
+        <input class="form-input" id="f-address-main" placeholder="기본 주소" readonly style="margin-top:8px;" />
+        <input class="form-input" id="f-address" placeholder="상세주소 입력 (동/호수)" style="margin-top:8px;" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">희망 날짜</label>
+        <input class="form-input" type="date" id="f-date" min="${new Date().toISOString().split('T')[0]}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">희망 시간 <span style="color:var(--gray);font-weight:400;">(오전 8시~오후 8시)</span></label>
+        <select class="form-select" id="f-time">
+          <option value="">시간 선택</option>
+          ${genTimeOptions()}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">연락처</label>
+        <input class="form-input" type="tel" id="f-phone" placeholder="010-0000-0000" />
+      </div>
+      <button class="btn btn-primary" onclick="submitBooking(${id})">신청 완료하기</button>
+    </div>
+
+    <div class="notice-box">
+      ✅ 신청 후 기사님이 확인 후 예약 확정해드립니다<br>
+      ✅ 결제는 작업 완료 후 현장에서 기사님께 직접<br>
+      ✅ 작업 완료 사진 전송해드립니다
+    </div>
+  `;
+}
+
+function searchAddress() {
+  new daum.Postcode({
+    oncomplete: function(data) {
+      document.getElementById('f-postcode').value = data.zonecode;
+      document.getElementById('f-address-main').value = data.roadAddress || data.jibunAddress;
+      document.getElementById('f-address').focus();
+    }
+  }).open();
+}
+
+// 업무 시간만 생성 (오전 8시 ~ 오후 8시)
+function genTimeOptions() {
+  const slots = [];
+  for (let h = 8; h <= 20; h++) {
+    const period = h < 12 ? '오전' : '오후';
+    let display;
+    if (h === 12) display = '오후 12시';
+    else if (h < 12) display = `오전 ${h}시`;
+    else display = `오후 ${h - 12}시`;
+    slots.push(`<option value="${display}">${display}</option>`);
+  }
+  return slots.join('');
+}
+
+function closeDetail() {
+  document.getElementById('user-list-view').style.display = 'block';
+  document.getElementById('user-detail-view').classList.remove('open');
+  document.getElementById('user-success-view').classList.remove('open');
+  renderServiceGrid();
+}
+
+function backToList() { closeDetail(); }
+
+async function submitBooking(serviceId) {
+  const addressMain = (document.getElementById('f-address-main')?.value || '').trim();
+  const addressDetail = (document.getElementById('f-address')?.value || '').trim();
+  const address = addressMain ? `${addressMain} ${addressDetail}`.trim() : addressDetail;
+  const date = document.getElementById('f-date').value;
+  const time = document.getElementById('f-time').value;
+  const phone = document.getElementById('f-phone').value.trim();
+  if (!address || !date || !time || !phone) { alert('모든 항목을 입력해주세요'); return; }
+
+  // 중복 신청 체크 (같은 전화번호 + 같은 서비스)
+  const dup = bookings.find(b => b.serviceId === serviceId && b.phone === phone && b.status !== '반려');
+  if (dup) {
+    alert('이미 이 서비스에 신청하셨습니다.\n"📬 내 신청" 탭에서 현황을 확인해주세요.');
+    return;
+  }
+
+  const btn = document.querySelector('#detail-content .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = '신청 중...'; }
+  await dbAddBooking({ serviceId, address, date, time, phone });
+  await loadData();
+  document.getElementById('user-detail-view').classList.remove('open');
+  document.getElementById('user-success-view').classList.add('open');
+  renderAll();
+}
+
+// ── 내 신청 조회
+function searchMyBookings() {
+  const phone = document.getElementById('my-phone').value.trim();
+  if (!phone) { alert('전화번호를 입력해주세요'); return; }
+
+  const myList = bookings.filter(b => b.phone === phone);
+  const resultEl = document.getElementById('my-bookings-result');
+
+  if (myList.length === 0) {
+    resultEl.innerHTML = `<div class="card" style="text-align:center;padding:28px 16px;">
+      <div style="font-size:32px;margin-bottom:10px;">🔍</div>
+      <div style="font-weight:700;margin-bottom:6px;">신청 내역이 없습니다</div>
+      <div style="font-size:13px;color:var(--gray);">전화번호를 다시 확인해주세요</div>
+    </div>`;
+    return;
+  }
+
+  resultEl.innerHTML = `<div class="section-label">${myList.length}건의 신청 내역</div>` +
+    myList.map(b => {
+      const svc = services.find(s => s.id === b.serviceId);
+      return `<div class="my-booking-card">
+        <div class="my-booking-header">
+          <div>
+            <div class="my-booking-service">${svc?.emoji || ''} ${svc?.name || '(삭제된 서비스)'}</div>
+            <div class="my-booking-date">📅 ${b.date} ${b.time}</div>
+            <div class="my-booking-address">📍 ${b.address}</div>
+          </div>
+          <div>${statusBadge(b.status)}</div>
+        </div>
+        ${b.status === '반려' && b.comment ? `<div class="my-booking-comment"><strong>반려 사유:</strong> ${b.comment}</div>` : ''}
+        ${b.status === '완료' && b.photoUrl ? `<div style="margin-top:10px;"><img src="${b.photoUrl}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;" /></div>` : ''}
+      </div>`;
+    }).join('');
+}
+
+// ── 기사님 화면
+function renderWorker() {
+  const stats = document.getElementById('worker-stats');
+  const list = document.getElementById('worker-list');
+  if (!stats || !list) return;
+  const total = bookings.length;
+  const done = bookings.filter(b => b.status === '완료').length;
+  const pending = bookings.filter(b => b.status === '신청완료').length;
+  stats.innerHTML = `
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">총 신청</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${done}</div><div class="stat-label">완료</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--orange)">${pending}</div><div class="stat-label">확인 필요</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${bookings.filter(b=>b.status==='예약확인').length}</div><div class="stat-label">예약확인</div></div>
+  `;
+  list.innerHTML = bookings.length === 0
+    ? '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">신청 내역이 없습니다</div>'
+    : bookings.map((b, i) => {
+      const svc = services.find(s => s.id === b.serviceId);
+      let actions = '';
+      if (b.status === '신청완료') {
+        actions = `<button class="btn btn-sm btn-blue" onclick="workerConfirm(${b.id})">예약확인</button>
+                   <button class="btn btn-sm btn-red" onclick="openReject(${b.id})">반려</button>`;
+      } else if (b.status === '예약확인') {
+        actions = `<button class="btn btn-sm btn-green" onclick="openComplete(${b.id})">완료</button>
+                   <button class="btn btn-sm btn-red" onclick="openReject(${b.id})">반려</button>`;
+      }
+      // 전화번호 클릭 가능하게 tel: 링크 처리
+      const phoneClean = b.phone.replace(/[^0-9]/g, '');
+      return `<div class="booking-item">
+        <div class="booking-num">${i+1}</div>
+        <div class="booking-info">
+          <div class="booking-title">${b.address}</div>
+          <div class="booking-sub">${svc?.emoji||''} ${svc?.name||''} · ${b.date} ${b.time}</div>
+          <div class="booking-sub"><a href="tel:${phoneClean}" class="phone-link">📞 ${b.phone}</a></div>
+          ${b.comment ? `<div class="comment-box"><strong>반려사유:</strong> ${b.comment}</div>` : ''}
+          ${b.photoUrl ? `<div style="margin-top:8px;"><img src="${b.photoUrl}" style="width:100%;border-radius:8px;max-height:120px;object-fit:cover;" /></div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;">
+          ${statusBadge(b.status)}
+          <div style="display:flex;gap:4px;">${actions}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+async function workerConfirm(id) {
+  await dbUpdateBookingStatus(id, '예약확인');
+  await loadData(); renderAll();
+}
+
+function openReject(id) {
+  rejectingBookingId = id;
+  document.getElementById('reject-comment').value = '';
+  openModal('modal-reject');
+}
+
+async function confirmReject() {
+  const comment = document.getElementById('reject-comment').value.trim();
+  if (!comment) { alert('반려 사유를 입력해주세요'); return; }
+  await dbUpdateBookingStatus(rejectingBookingId, '반려', comment);
+  await loadData();
+  closeModal('modal-reject'); renderAll();
+}
+
+function openComplete(id) {
+  completingBookingId = id;
+  completingPhotoBase64 = null;
+  document.getElementById('photo-preview').innerHTML = '<div style="font-size:32px;margin-bottom:8px;">📸</div><div style="font-size:13px;color:var(--gray);">사진을 추가하세요</div>';
+  document.getElementById('photo-upload-status').style.display = 'none';
+  openModal('modal-complete');
+}
+
+function previewPhoto(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    completingPhotoBase64 = e.target.result; // base64 저장
+    document.getElementById('photo-preview').innerHTML = `<img src="${e.target.result}" style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;">`;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function uploadPhotoToSupabase(base64) {
+  // base64 → Blob → Supabase Storage 업로드
+  try {
+    const res = await fetch(base64);
+    const blob = await res.blob();
+    const filename = `complete_${completingBookingId}_${Date.now()}.jpg`;
+    const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/photos/${filename}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': blob.type,
+        'x-upsert': 'true'
+      },
+      body: blob
+    });
+    if (!uploadRes.ok) { console.error('사진 업로드 실패'); return null; }
+    return `${SUPABASE_URL}/storage/v1/object/public/photos/${filename}`;
+  } catch(e) {
+    console.error('사진 업로드 오류:', e);
+    return null;
+  }
+}
+
+async function confirmComplete() {
+  const btn = document.getElementById('btn-complete');
+  btn.disabled = true; btn.textContent = '처리 중...';
+
+  let photoUrl = '';
+  if (completingPhotoBase64) {
+    document.getElementById('photo-upload-status').style.display = 'block';
+    document.getElementById('photo-upload-status').textContent = '사진 업로드 중...';
+    photoUrl = await uploadPhotoToSupabase(completingPhotoBase64) || '';
+    document.getElementById('photo-upload-status').style.display = 'none';
+  }
+
+  await dbUpdateBookingStatus(completingBookingId, '완료', '', photoUrl);
+  await loadData();
+  btn.disabled = false; btn.textContent = '완료 처리';
+  closeModal('modal-complete'); renderAll();
+}
+
+// ── 어드민 화면
+function renderAdmin() {
+  const stats = document.getElementById('admin-stats');
+  const svcList = document.getElementById('admin-service-list');
+  const bklist = document.getElementById('admin-bookings');
+  if (!stats) return;
+
+  const totalRevenue = bookings.filter(b => b.status === '완료').reduce((acc, b) => {
+    const svc = services.find(s => s.id === b.serviceId);
+    return acc + (svc ? svc.price - svc.cost : 0);
+  }, 0);
+
+  stats.innerHTML = `
+    <div class="stat-card"><div class="stat-num">${services.filter(s=>s.active).length}</div><div class="stat-label">서비스 블럭</div></div>
+    <div class="stat-card"><div class="stat-num">${bookings.length}</div><div class="stat-label">총 신청</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${bookings.filter(b=>b.status==='완료').length}</div><div class="stat-label">완료</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--orange);font-size:18px;">${fmt(totalRevenue)}</div><div class="stat-label">예상 수익</div></div>
+  `;
+
+  svcList.innerHTML = services.map(s => {
+    const cnt = bookings.filter(b => b.serviceId === s.id).length;
+    const exp = isExpired(s) ? ' <span style="color:var(--gray);font-size:11px;">(마감됨)</span>' : '';
+    return `<div class="admin-service">
+      <div class="admin-service-icon">${s.emoji}</div>
+      <div class="admin-service-info">
+        <div class="admin-service-name">${s.name}${exp}</div>
+        <div class="admin-service-meta">${fmt(s.price)} · ${cnt}/${s.target}명 · 마진 ${fmt(s.price - s.cost)} · 마감 ${s.deadline}</div>
+      </div>
+      <div class="admin-service-actions">
+        <button class="btn btn-sm btn-orange" onclick="openEditService(${s.id})">수정</button>
+        <button class="btn btn-sm btn-red" onclick="deleteService(${s.id})">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  bklist.innerHTML = bookings.length === 0
+    ? '<div style="text-align:center;padding:24px;color:var(--gray);font-size:13px;">신청 내역이 없습니다</div>'
+    : bookings.map((b, i) => {
+      const svc = services.find(s => s.id === b.serviceId);
+      const phoneClean = b.phone.replace(/[^0-9]/g, '');
+      return `<div class="booking-item">
+        <div class="booking-num">${i+1}</div>
+        <div class="booking-info">
+          <div class="booking-title">${b.address}</div>
+          <div class="booking-sub">${svc?.emoji||''} ${svc?.name||''} · ${b.date} ${b.time} · <a href="tel:${phoneClean}" class="phone-link">${b.phone}</a></div>
+          ${b.comment ? `<div class="comment-box"><strong>반려:</strong> ${b.comment}</div>` : ''}
+        </div>
+        <div>${statusBadge(b.status)}</div>
+      </div>`;
+    }).join('');
+}
+
+// ── 어드민 서비스 CRUD
+function openAddService() {
+  editingServiceId = null;
+  document.getElementById('modal-service-title').textContent = '서비스 블럭 추가';
+  ['s-emoji','s-name','s-price','s-cost','s-desc','s-target','s-deadline','s-origprice'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  loadDraft();
+  openModal('modal-service');
+}
+
+function openEditService(id) {
+  editingServiceId = id;
+  const s = services.find(x => x.id === id);
+  document.getElementById('modal-service-title').textContent = '서비스 블럭 수정';
+  document.getElementById('s-emoji').value = s.emoji;
+  document.getElementById('s-name').value = s.name;
+  document.getElementById('s-price').value = s.price;
+  document.getElementById('s-cost').value = s.cost;
+  document.getElementById('s-desc').value = s.desc;
+  document.getElementById('s-target').value = s.target;
+  document.getElementById('s-deadline').value = s.deadline;
+  document.getElementById('s-origprice').value = s.origPrice || '';
+  openModal('modal-service');
+}
+
+async function saveService() {
+  const emoji = document.getElementById('s-emoji').value.trim() || '🔧';
+  const name = document.getElementById('s-name').value.trim();
+  const price = parseInt(document.getElementById('s-price').value) || 0;
+  const cost = parseInt(document.getElementById('s-cost').value) || 0;
+  const desc = document.getElementById('s-desc').value.trim();
+  const target = parseInt(document.getElementById('s-target').value) || 10;
+  const deadline = document.getElementById('s-deadline').value;
+  const origPrice = parseInt(document.getElementById('s-origprice').value) || 0;
+  if (!name || !price || !deadline) { alert('서비스명, 가격, 마감일은 필수입니다'); return; }
+  if (editingServiceId) {
+    await dbUpdateService(editingServiceId, { emoji, name, price, cost, desc, target, deadline, origPrice });
+  } else {
+    await dbAddService({ emoji, name, price, cost, desc, target, deadline, origPrice });
+  }
+  await loadData();
+  closeModal('modal-service');
+  clearDraft();
+  renderAll();
+}
+
+async function deleteService(id) {
+  if (!confirm('이 서비스 블럭을 삭제할까요?')) return;
+  await dbDeleteService(id);
+  await loadData(); renderAll();
+}
+
+// ── MODAL HELPERS
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) {
+  if (id === 'modal-service') saveDraft();
+  document.getElementById(id).classList.remove('open');
+}
+
+// ── 임시저장 (서비스 모달)
+const DRAFT_KEY = 'bt_service_draft';
+function saveDraft() {
+  const draft = {
+    emoji: document.getElementById('s-emoji').value,
+    name: document.getElementById('s-name').value,
+    price: document.getElementById('s-price').value,
+    cost: document.getElementById('s-cost').value,
+    desc: document.getElementById('s-desc').value,
+    target: document.getElementById('s-target').value,
+    deadline: document.getElementById('s-deadline').value,
+    origPrice: document.getElementById('s-origprice').value,
+  };
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+}
+function loadDraft() {
+  const raw = localStorage.getItem(DRAFT_KEY);
+  if (!raw) return;
+  try {
+    const d = JSON.parse(raw);
+    document.getElementById('s-emoji').value = d.emoji || '';
+    document.getElementById('s-name').value = d.name || '';
+    document.getElementById('s-price').value = d.price || '';
+    document.getElementById('s-cost').value = d.cost || '';
+    document.getElementById('s-desc').value = d.desc || '';
+    document.getElementById('s-target').value = d.target || '';
+    document.getElementById('s-deadline').value = d.deadline || '';
+    document.getElementById('s-origprice').value = d.origPrice || '';
+    document.getElementById('draft-badge').style.display = 'inline';
+  } catch(e) {}
+}
+function clearDraft() { localStorage.removeItem(DRAFT_KEY); }
+</script>
+</body>
+</html>
